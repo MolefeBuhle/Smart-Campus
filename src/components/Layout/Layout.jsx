@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import NotificationPanel from '../common/NotificationPanel';
+import ChatAssistant from '../common/ChatAssistant';
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth();
@@ -256,6 +257,9 @@ const Layout = ({ children }) => {
           </div>
         </main>
       </div>
+
+      {/* Chat Assistant - Added at the bottom */}
+      <ChatAssistant />
     </div>
   );
 };

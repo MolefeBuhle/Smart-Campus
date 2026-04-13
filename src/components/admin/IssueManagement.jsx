@@ -6,6 +6,8 @@ const IssueManagement = () => {
   const { getAllIssues, updateIssueStatus } = useMaintenance();
   const [issues, setIssues] = useState([]);
   const [stats, setStats] = useState({ reported: 0, inProgress: 0, fixed: 0 });
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [issueToDelete, setIssueToDelete] = useState(null);
 
   useEffect(() => {
     loadIssues();
@@ -19,6 +21,18 @@ const IssueManagement = () => {
       inProgress: allIssues.filter(i => i.status === 'in-progress').length,
       fixed: allIssues.filter(i => i.status === 'fixed').length
     });
+  };
+
+  const handleDeleteIssue = () => {
+    if (!issueToDelete) return;
+
+    const updatedIssues = issues.filter(issue => issue.id !== issueToDelete.id);
+    localStorage.setItem('campus_maintenance', JSON.stringify(updatedIssues));
+    setIssues(updatedIssues);
+    toast.success('Issue deleted successfully!');
+    setShowDeleteModal(false);
+    setIssueToDelete(null);
+    loadIssues();
   };
 
   const handleStatusChange = async (issueId, newStatus) => {
@@ -43,7 +57,7 @@ const IssueManagement = () => {
     <div>
       <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white shadow-lg mb-6">
         <h1 className="text-2xl font-bold mb-2">Issue Management</h1>
-        <p className="text-blue-100">Track and manage maintenance requests</p>
+        <p className="text-blue-100">Track, manage, and delete maintenance requests</p>
       </div>
 
       {/* Stats Summary */}
@@ -81,27 +95,31 @@ const IssueManagement = () => {
                 </div>
                 <p className="text-sm text-gray-600 mb-2">{issue.description}</p>
                 <p className="text-xs text-gray-500">📍 {issue.roomName}</p>
-                <p className="text-xs text-gray-500">👤 {issue.reporterName} ({issue.reporterRole})</p>
-                <p className="text-xs text-gray-400 mt-2">
-                  {new Date(issue.createdAt).toLocaleDateString()}
-                </p>
-                <div className="mt-3">
+                <p className="text-xs text-gray-500">👤 Reported by: {issue.reporterName} ({issue.reporterRole})</p>
+                <div className="flex gap-2 mt-3">
                   <select
                     onChange={(e) => handleStatusChange(issue.id, e.target.value)}
                     value={issue.status}
-                    className="w-full text-sm border border-gray-300 rounded px-2 py-1"
+                    className="flex-1 text-sm border border-gray-300 rounded px-2 py-1"
                   >
                     <option value="reported">📋 Reported</option>
                     <option value="in-progress">🔧 In Progress</option>
                     <option value="fixed">✅ Fixed</option>
                   </select>
+                  <button
+                    onClick={() => {
+                      setIssueToDelete(issue);
+                      setShowDeleteModal(true);
+                    }}
+                    className="px-2 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+                  >
+                    🗑️
+                  </button>
                 </div>
               </div>
             ))}
             {reportedIssues.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                No reported issues
-              </div>
+              <div className="text-center py-8 text-gray-500">No reported issues</div>
             )}
           </div>
         </div>
@@ -123,24 +141,31 @@ const IssueManagement = () => {
                 </div>
                 <p className="text-sm text-gray-600 mb-2">{issue.description}</p>
                 <p className="text-xs text-gray-500">📍 {issue.roomName}</p>
-                <p className="text-xs text-gray-500">👤 {issue.reporterName} ({issue.reporterRole})</p>
-                <div className="mt-3">
+                <p className="text-xs text-gray-500">👤 Reported by: {issue.reporterName}</p>
+                <div className="flex gap-2 mt-3">
                   <select
                     onChange={(e) => handleStatusChange(issue.id, e.target.value)}
                     value={issue.status}
-                    className="w-full text-sm border border-gray-300 rounded px-2 py-1"
+                    className="flex-1 text-sm border border-gray-300 rounded px-2 py-1"
                   >
                     <option value="reported">📋 Reported</option>
                     <option value="in-progress">🔧 In Progress</option>
                     <option value="fixed">✅ Fixed</option>
                   </select>
+                  <button
+                    onClick={() => {
+                      setIssueToDelete(issue);
+                      setShowDeleteModal(true);
+                    }}
+                    className="px-2 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+                  >
+                    🗑️
+                  </button>
                 </div>
               </div>
             ))}
             {inProgressIssues.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                No issues in progress
-              </div>
+              <div className="text-center py-8 text-gray-500">No issues in progress</div>
             )}
           </div>
         </div>
@@ -162,28 +187,71 @@ const IssueManagement = () => {
                 </div>
                 <p className="text-sm text-gray-600 mb-2">{issue.description}</p>
                 <p className="text-xs text-gray-500">📍 {issue.roomName}</p>
-                <p className="text-xs text-gray-500">👤 {issue.reporterName} ({issue.reporterRole})</p>
-                <div className="mt-3">
+                <p className="text-xs text-gray-500">👤 Reported by: {issue.reporterName}</p>
+                <div className="flex gap-2 mt-3">
                   <select
                     onChange={(e) => handleStatusChange(issue.id, e.target.value)}
                     value={issue.status}
-                    className="w-full text-sm border border-gray-300 rounded px-2 py-1"
+                    className="flex-1 text-sm border border-gray-300 rounded px-2 py-1"
                   >
                     <option value="reported">📋 Reported</option>
                     <option value="in-progress">🔧 In Progress</option>
                     <option value="fixed">✅ Fixed</option>
                   </select>
+                  <button
+                    onClick={() => {
+                      setIssueToDelete(issue);
+                      setShowDeleteModal(true);
+                    }}
+                    className="px-2 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+                  >
+                    🗑️
+                  </button>
                 </div>
               </div>
             ))}
             {fixedIssues.length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                No fixed issues
-              </div>
+              <div className="text-center py-8 text-gray-500">No fixed issues</div>
             )}
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && issueToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <div className="text-center mb-4">
+              <div className="text-6xl mb-3">⚠️</div>
+              <h3 className="text-lg font-semibold text-gray-900">Confirm Delete</h3>
+              <p className="text-gray-600 mt-2">
+                Are you sure you want to delete this issue?
+              </p>
+              <p className="text-sm text-red-600 mt-2">
+                <strong>{issueToDelete.title}</strong><br/>
+                Reported by: {issueToDelete.reporterName}
+              </p>
+            </div>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setIssueToDelete(null);
+                }}
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteIssue}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+              >
+                Delete Issue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
