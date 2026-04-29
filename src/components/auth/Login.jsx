@@ -157,44 +157,6 @@ const Login = () => {
             </button>
           </form>
 
-          {/* Demo Accounts Dropdown */}
-          <div className="mt-3 relative">
-            <button
-              onClick={() => setShowDemoDropdown(!showDemoDropdown)}
-              className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-all duration-300 group"
-            >
-              <span className="flex items-center gap-1">
-                <svg className="w-4 h-4 text-gray-500 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Quick Access
-              </span>
-              <svg className={`w-4 h-4 transition-transform duration-300 ${showDemoDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            
-            {showDemoDropdown && (
-              <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden animate-slideDown">
-                <div className="max-h-48 overflow-y-auto">
-                  {demoAccounts.map((account, index) => (
-                    <button
-                      key={index}
-                      onClick={() => selectDemoAccount(account.email, account.password)}
-                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gradient-to-r transition-all duration-300 ${
-                        account.color === 'blue' ? 'hover:bg-blue-50 hover:text-blue-600' :
-                        account.color === 'green' ? 'hover:bg-green-50 hover:text-green-600' :
-                        'hover:bg-purple-50 hover:text-purple-600'
-                      }`}
-                    >
-                      {account.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Register Link */}
           <div className="mt-3 text-center">
             <Link to="/register" className="text-xs text-blue-600 hover:text-blue-700 hover:underline transition-all duration-300">
@@ -205,7 +167,7 @@ const Login = () => {
 
         {/* Footer */}
         <div className="text-center mt-3">
-          <p className="text-white/50 text-[10px]">© 2024 Smart Campus Portal</p>
+          <p className="text-white/50 text-[10px]">© 2026 Smart Campus Portal</p>
         </div>
       </div>
 
