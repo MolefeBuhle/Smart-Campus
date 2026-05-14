@@ -35,11 +35,12 @@ const Layout = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* TOP BAR – using grid for perfect centering */}
+      {/* TOP BAR - responsive: mobile hides user avatar/name */}
       <div className="fixed top-0 left-0 right-0 bg-gradient-to-r from-primary-600 to-secondary-600 text-white shadow-md z-30">
-        <div className="grid grid-cols-3 items-center px-4 py-3">
-          {/* LEFT COLUMN: Hamburger (mobile) + User avatar + name + dropdown */}
-          <div className="flex items-center gap-3 justify-start">
+        <div className="flex items-center justify-between px-4 py-3 lg:grid lg:grid-cols-3">
+          {/* LEFT COLUMN */}
+          <div className="flex items-center gap-3">
+            {/* Hamburger menu (visible on all screens, but on desktop it's hidden by custom class? Actually we keep it visible but it's only needed for mobile; we can keep it but on desktop it's redundant because sidebar is always open. We'll hide it on desktop using lg:hidden, but then the left column would be empty on desktop. Instead, we show user dropdown on desktop and hamburger only on mobile. */}
             <button
               onClick={() => setSidebarOpen(true)}
               className="lg:hidden p-2 rounded-lg hover:bg-primary-700 transition-colors"
@@ -48,13 +49,14 @@ const Layout = ({ children }) => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <div className="relative">
+            {/* Desktop user section (hidden on mobile) */}
+            <div className="hidden lg:flex lg:items-center lg:gap-2">
               <button
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                 className="flex items-center gap-2 hover:bg-primary-700 rounded-lg px-2 py-1 transition-colors"
               >
                 <img src={user?.avatar} alt={user?.name} className="w-8 h-8 rounded-full border-2 border-white" />
-                <span className="text-sm font-medium hidden md:inline">{user?.name}</span>
+                <span className="text-sm font-medium">{user?.name}</span>
                 <svg className={`w-4 h-4 transition-transform ${userDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -69,6 +71,8 @@ const Layout = ({ children }) => {
                     <div className="flex justify-between"><span className="text-gray-500">Role:</span><span className="capitalize">{user?.role}</span></div>
                     {user?.studentId && <div className="flex justify-between"><span className="text-gray-500">Student ID:</span><span>{user.studentId}</span></div>}
                     {user?.employeeId && <div className="flex justify-between"><span className="text-gray-500">Employee ID:</span><span>{user.employeeId}</span></div>}
+                    {user?.course && <div className="flex justify-between"><span className="text-gray-500">Course:</span><span>{user.course}</span></div>}
+                    {user?.department && <div className="flex justify-between"><span className="text-gray-500">Department:</span><span>{user.department}</span></div>}
                     <div className="flex justify-between"><span className="text-gray-500">Joined:</span><span>{new Date(user?.createdAt || Date.now()).toLocaleDateString()}</span></div>
                   </div>
                 </div>
@@ -76,7 +80,7 @@ const Layout = ({ children }) => {
             </div>
           </div>
 
-          {/* CENTER COLUMN: Logo + System Name (perfectly centered) */}
+          {/* CENTER: Logo + System Name (always centered) */}
           <div className="flex items-center justify-center gap-2">
             <span className="text-2xl">🎓</span>
             <span className="text-lg font-bold tracking-wide">Smart Campus Portal</span>
@@ -94,9 +98,8 @@ const Layout = ({ children }) => {
         </div>
       </div>
 
-      {/* DESKTOP SIDEBAR (unchanged) */}
+      {/* DESKTOP SIDEBAR (collapsible) */}
       <div className={`hidden lg:flex fixed left-0 top-14 h-[calc(100vh-3.5rem)] bg-white border-r border-gray-200 shadow-sm z-20 flex-col transition-all duration-300 ${sidebarCollapsed ? 'w-20' : 'w-64'}`}>
-        {/* Toggle button */}
         <button
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
           className="absolute -right-3 top-20 bg-white border border-gray-300 rounded-full p-1 shadow-md hover:bg-gray-50 transition-colors z-30"
@@ -145,7 +148,7 @@ const Layout = ({ children }) => {
         </div>
       </div>
 
-      {/* MOBILE SIDEBAR (unchanged) */}
+      {/* MOBILE SIDEBAR (simpler, no user info) */}
       {sidebarOpen && (
         <>
           <div className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />
@@ -196,7 +199,6 @@ const Layout = ({ children }) => {
         </main>
       </div>
 
-      {/* AI Chat Assistant */}
       <GroqChat />
     </div>
   );
