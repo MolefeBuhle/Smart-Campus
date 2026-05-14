@@ -14,7 +14,6 @@ import Layout from './components/Layout/Layout';
 // Student Components
 import StudentDashboard from './components/student/StudentDashboard';
 import MyAppointments from './components/student/MyAppointments';
-import MyCourses from './components/student/MyCourses';
 import MyIssues from './components/student/MyIssues';
 import AppointmentsBooking from './components/student/AppointmentsBooking';
 import StudentTimetable from './components/student/StudentTimetable';
@@ -92,7 +91,6 @@ function AppWrapper() {
         <Route path="/dashboard" element={getDashboardComponent()} />
         <Route path="/appointments" element={<AppointmentsBooking />} />
         <Route path="/my-appointments" element={<MyAppointments />} />
-        <Route path="/my-courses" element={<MyCourses />} />
         <Route path="/my-issues" element={<MyIssues />} />
         <Route path="/timetable" element={<StudentTimetable />} />
         <Route path="/manage-appointments" element={<AppointmentRequests />} />

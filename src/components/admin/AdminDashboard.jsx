@@ -1,3 +1,4 @@
+// src/components/admin/AdminDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMaintenance } from '../../contexts/MaintenanceContext';
@@ -76,11 +77,13 @@ const AdminDashboard = () => {
 
   return (
     <div>
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white shadow-lg mb-6">
+      {/* Welcome banner – using system's green gradient (emerald/teal) */}
+      <div className="bg-gradient-to-r from-primary-500 to-secondary-600 rounded-xl p-6 text-white shadow-lg mb-6">
         <h1 className="text-2xl font-bold mb-2">Admin Dashboard</h1>
-        <p className="text-blue-100">Welcome back, {user?.name}. Here's your campus overview.</p>
+        <p className="text-primary-100">Welcome back, {user?.name}. Here's your campus overview.</p>
       </div>
 
+      {/* Stats cards – unchanged */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         <div 
           onClick={() => handleNavigate('users')}
@@ -142,6 +145,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
+      {/* Recent Issues Section – unchanged */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-gray-900">Recent Issues Reported</h2>

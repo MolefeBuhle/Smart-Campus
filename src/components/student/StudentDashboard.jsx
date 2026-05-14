@@ -1,3 +1,4 @@
+// src/components/student/StudentDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAppointments } from '../../contexts/AppointmentContext';
@@ -7,11 +8,10 @@ import { useNavigate } from 'react-router-dom';
 const StudentDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { getStudentAppointments } = useAppointments();
+  const { getStudentAppointments, appointments } = useAppointments();
   const { getUserIssues } = useMaintenance();
   const [stats, setStats] = useState({
     appointments: 0,
-    courses: 0,
     issues: 0
   });
   const [upcomingAppointments, setUpcomingAppointments] = useState([]);
@@ -20,7 +20,7 @@ const StudentDashboard = () => {
     if (user) {
       loadStudentData();
     }
-  }, [user]);
+  }, [user, appointments]);  // ← re‑run when appointments change
 
   const loadStudentData = () => {
     const myAppointments = getStudentAppointments();
@@ -30,7 +30,6 @@ const StudentDashboard = () => {
     
     setStats({
       appointments: pendingAppointments.length + confirmedAppointments.length,
-      courses: user?.enrolledCourses?.length || 4,
       issues: myIssues.length
     });
     
@@ -40,8 +39,6 @@ const StudentDashboard = () => {
   const handleNavigate = (type) => {
     if (type === 'appointments') {
       navigate('/my-appointments');
-    } else if (type === 'courses') {
-      navigate('/my-courses');
     } else if (type === 'issues') {
       navigate('/my-issues');
     } else if (type === 'book') {
@@ -55,35 +52,23 @@ const StudentDashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white shadow-lg">
+      <div className="bg-gradient-to-r from-primary-500 to-secondary-600 rounded-xl p-6 text-white shadow-lg">
         <h1 className="text-2xl font-bold mb-2">Welcome, {user?.name}!</h1>
-        <p className="text-blue-100">Here's your academic summary</p>
+        <p className="text-primary-100">Here's your academic summary</p>
       </div>
       
-      {/* Clickable Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Two stats cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div 
           onClick={() => handleNavigate('appointments')}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer hover:bg-blue-50"
+          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer hover:bg-primary-50"
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-3xl">📅</span>
-            <span className="text-2xl font-bold text-blue-600">{stats.appointments}</span>
+            <span className="text-2xl font-bold text-primary-600">{stats.appointments}</span>
           </div>
           <h3 className="text-gray-600 font-medium">Appointments</h3>
-          <p className="text-xs text-blue-500 mt-1">Click to view all →</p>
-        </div>
-        
-        <div 
-          onClick={() => handleNavigate('courses')}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer hover:bg-green-50"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-3xl">📚</span>
-            <span className="text-2xl font-bold text-green-600">{stats.courses}</span>
-          </div>
-          <h3 className="text-gray-600 font-medium">Current Courses</h3>
-          <p className="text-xs text-green-500 mt-1">Click to view details →</p>
+          <p className="text-xs text-primary-500 mt-1">Click to view all →</p>
         </div>
         
         <div 
@@ -96,34 +81,6 @@ const StudentDashboard = () => {
           </div>
           <h3 className="text-gray-600 font-medium">Issues Reported</h3>
           <p className="text-xs text-yellow-500 mt-1">Click to track →</p>
-        </div>
-      </div>
-      
-      {/* Quick Actions */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <button 
-            onClick={() => handleNavigate('book')}
-            className="p-3 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-left flex items-center gap-2"
-          >
-            <span className="text-xl">📅</span>
-            <span className="font-medium">Book an Appointment</span>
-          </button>
-          <button 
-            onClick={() => handleNavigate('timetable')}
-            className="p-3 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition text-left flex items-center gap-2"
-          >
-            <span className="text-xl">📖</span>
-            <span className="font-medium">View My Timetable</span>
-          </button>
-          <button 
-            onClick={() => handleNavigate('maintenance')}
-            className="p-3 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition text-left flex items-center gap-2"
-          >
-            <span className="text-xl">🔧</span>
-            <span className="font-medium">Report an Issue</span>
-          </button>
         </div>
       </div>
       
@@ -150,7 +107,7 @@ const StudentDashboard = () => {
             <p className="text-gray-500">No upcoming appointments</p>
             <button 
               onClick={() => handleNavigate('book')}
-              className="mt-2 text-blue-600 text-sm hover:underline"
+              className="mt-2 text-primary-600 text-sm hover:underline"
             >
               Book your first appointment →
             </button>

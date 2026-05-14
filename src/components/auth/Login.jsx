@@ -1,3 +1,4 @@
+// src/components/auth/Login.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -10,7 +11,10 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showDemoDropdown, setShowDemoDropdown] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const { login } = useAuth();
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetting, setResetting] = useState(false);
+  const { login, resetPassword } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,23 +25,21 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     const result = await login(email, password);
-    if (result.success) {
-      navigate('/dashboard');
-    }
+    if (result.success) navigate('/dashboard');
     setLoading(false);
   };
 
   const demoAccounts = [
-    { name: '🎓 Buhle Ndlovu', email: 'buhle@campus.edu', password: 'password123', role: 'student', color: 'blue' },
-    { name: '🎓 Mpho Dlamini', email: 'mpho@campus.edu', password: 'password123', role: 'student', color: 'blue' },
-    { name: '🎓 Karabo Nchabeleng', email: 'karabo@campus.edu', password: 'password123', role: 'student', color: 'blue' },
-    { name: '🎓 Kamogelo Molefe', email: 'kamogelo@campus.edu', password: 'password123', role: 'student', color: 'blue' },
-    { name: '👨‍🏫 Tebogo Molefe', email: 'tebogo@campus.edu', password: 'password123', role: 'lecturer', color: 'green' },
-    { name: '👨‍🏫 Kgotso Khumalo', email: 'kgotso@campus.edu', password: 'password123', role: 'lecturer', color: 'green' },
-    { name: '👨‍🏫 Itumeleng Molefe', email: 'itumeleng@campus.edu', password: 'password123', role: 'lecturer', color: 'green' },
-    { name: '👨‍🏫 Ishmail Mdlhuli', email: 'ishmail@campus.edu', password: 'password123', role: 'lecturer', color: 'green' },
-    { name: '👨‍💼 Sbuda Nkosi', email: 'sbuda@campus.edu', password: 'admin123', role: 'admin', color: 'purple' },
-    { name: '👨‍💼 Mpho Mathenjwa', email: 'mpho.mathenjwa@campus.edu', password: 'admin123', role: 'admin', color: 'purple' }
+    { name: '🎓 Buhle Ndlovu', email: 'buhle@campus.edu', password: 'password123', role: 'student', color: 'emerald' },
+    { name: '🎓 Mpho Dlamini', email: 'mpho@campus.edu', password: 'password123', role: 'student', color: 'emerald' },
+    { name: '🎓 Karabo Nchabeleng', email: 'karabo@campus.edu', password: 'password123', role: 'student', color: 'emerald' },
+    { name: '🎓 Kamogelo Molefe', email: 'kamogelo@campus.edu', password: 'password123', role: 'student', color: 'emerald' },
+    { name: '👨‍🏫 Tebogo Molefe', email: 'tebogo@campus.edu', password: 'password123', role: 'lecturer', color: 'teal' },
+    { name: '👨‍🏫 Kgotso Khumalo', email: 'kgotso@campus.edu', password: 'password123', role: 'lecturer', color: 'teal' },
+    { name: '👨‍🏫 Itumeleng Molefe', email: 'itumeleng@campus.edu', password: 'password123', role: 'lecturer', color: 'teal' },
+    { name: '👨‍🏫 Ishmail Mdlhuli', email: 'ishmail@campus.edu', password: 'password123', role: 'lecturer', color: 'teal' },
+    { name: '👨‍💼 Sbuda Nkosi', email: 'sbuda@campus.edu', password: 'admin123', role: 'admin', color: 'teal' },
+    { name: '👨‍💼 Mpho Mathenjwa', email: 'mpho.mathenjwa@campus.edu', password: 'admin123', role: 'admin', color: 'teal' }
   ];
 
   const selectDemoAccount = (demoEmail, demoPassword) => {
@@ -47,7 +49,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-blue-900 via-blue-700 to-blue-500 relative overflow-hidden p-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-emerald-900 via-emerald-700 to-teal-500 relative overflow-hidden p-4">
       {/* Animated Background Circles */}
       <div className="fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
@@ -75,7 +77,7 @@ const Login = () => {
           
           {/* Logo Section */}
           <div className="text-center mb-4">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-600 to-blue-500 rounded-xl shadow-lg mb-2 animate-bounce-slow">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-xl shadow-lg mb-2 animate-bounce-slow">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
@@ -89,14 +91,14 @@ const Login = () => {
             <div className="group">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-4 w-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-4 w-4 text-gray-400 group-focus-within:text-primary-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                   </svg>
                 </div>
                 <input
                   type="email"
                   required
-                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white/50 transition-all duration-300"
+                  className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm bg-white/50 transition-all duration-300"
                   placeholder="Email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -107,14 +109,14 @@ const Login = () => {
             <div className="group">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-4 w-4 text-gray-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-4 w-4 text-gray-400 group-focus-within:text-primary-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
-                  className="w-full pl-9 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm bg-white/50 transition-all duration-300"
+                  className="w-full pl-9 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm bg-white/50 transition-all duration-300"
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -122,7 +124,7 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-blue-500 transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-primary-500 transition-colors"
                 >
                   {showPassword ? (
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,10 +140,21 @@ const Login = () => {
               </div>
             </div>
 
+            {/* Forgot Password Link */}
+            <div className="text-right mt-1">
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(true)}
+                className="text-xs text-primary-600 hover:text-primary-700 hover:underline transition"
+              >
+                Forgot Password?
+              </button>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg font-medium hover:from-blue-700 hover:to-blue-600 transition-all duration-300 transform hover:scale-[1.02] text-sm shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg font-medium hover:from-primary-600 hover:to-secondary-600 transition-all duration-300 transform hover:scale-[1.02] text-sm shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="flex items-center justify-center">
@@ -159,7 +172,7 @@ const Login = () => {
 
           {/* Register Link */}
           <div className="mt-3 text-center">
-            <Link to="/register" className="text-xs text-blue-600 hover:text-blue-700 hover:underline transition-all duration-300">
+            <Link to="/register" className="text-xs text-primary-600 hover:text-primary-700 hover:underline transition-all duration-300">
               Don't have an account? <span className="font-semibold">Sign up</span>
             </Link>
           </div>
@@ -171,7 +184,54 @@ const Login = () => {
         </div>
       </div>
 
-      {/* Custom CSS for animations */}
+      {/* Forgot Password Modal */}
+      {showForgotModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Reset Password</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <input
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  placeholder="your@email.com"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={() => setShowForgotModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    if (!resetEmail) {
+                      toast.error('Please enter your email address');
+                      return;
+                    }
+                    setResetting(true);
+                    const result = await resetPassword(resetEmail);
+                    if (result.success) {
+                      setShowForgotModal(false);
+                      setResetEmail('');
+                    }
+                    setResetting(false);
+                  }}
+                  disabled={resetting}
+                  className="flex-1 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition disabled:opacity-50"
+                >
+                  {resetting ? 'Sending...' : 'Send Reset Email'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style jsx>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px); }

@@ -1,11 +1,14 @@
+// src/components/student/StudentTimetable.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAppointments } from '../../contexts/AppointmentContext';
 import toast from 'react-hot-toast';
 
 const StudentTimetable = () => {
   const { user } = useAuth();
-  const [week, setWeek] = useState(1);
+  const { getStudentAppointments } = useAppointments();
   const [timetable, setTimetable] = useState({});
+  const [week, setWeek] = useState(1);
 
   useEffect(() => {
     if (user) {
@@ -14,91 +17,90 @@ const StudentTimetable = () => {
   }, [user]);
 
   const generateTimetable = () => {
-    // Get the student's enrolled courses from their profile
-    let studentCourses = [];
+    const allAppointments = getStudentAppointments();
+    // Only confirmed appointments
+    const confirmed = allAppointments.filter(apt => apt.status === 'confirmed');
     
-    // For hardcoded students (Buhle, Mpho, Karabo, Kamogelo)
-    if (user?.enrolledCourses && user.enrolledCourses.length > 0) {
-      studentCourses = user.enrolledCourses;
-    } 
-    // For new students who completed the wizard
-    else if (user?.courseDetails && user.courseDetails.length > 0) {
-      studentCourses = user.courseDetails.map(c => c.id);
-    }
-    // For new students who selected courses in wizard
-    else if (user?.selectedCourses && user.selectedCourses.length > 0) {
-      studentCourses = user.selectedCourses;
-    }
+    // Get today's date (without time)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
-    console.log("Student courses:", studentCourses);
+    // Filter future appointments (including today)
+    const futureConfirmed = confirmed.filter(apt => {
+      const aptDate = new Date(apt.date);
+      aptDate.setHours(0, 0, 0, 0);
+      return aptDate >= today;
+    });
     
-    // Define all courses with their schedules
-    const allCourses = {
-      // Computer Science
-      CS101: { name: 'Computer Science 101', code: 'CS101', lecturer: 'Tebogo Molefe', room: 'Lecture Hall A', day: 'Monday', time: '09:00 - 10:30', timeSlot: '09:00' },
-      CS201: { name: 'Data Structures', code: 'CS201', lecturer: 'Tebogo Molefe', room: 'CS Lab 101', day: 'Tuesday', time: '11:00 - 12:30', timeSlot: '11:00' },
-      CS301: { name: 'Algorithms', code: 'CS301', lecturer: 'Tebogo Molefe', room: 'CS Lab 102', day: 'Wednesday', time: '14:00 - 15:30', timeSlot: '14:00' },
-      // Information Technology
-      IT101: { name: 'Introduction to IT', code: 'IT101', lecturer: 'Tebogo Molefe', room: 'IT Lab 101', day: 'Monday', time: '09:00 - 10:30', timeSlot: '09:00' },
-      IT201: { name: 'Network Security', code: 'IT201', lecturer: 'Tebogo Molefe', room: 'Network Lab', day: 'Tuesday', time: '13:00 - 14:30', timeSlot: '13:00' },
-      IT301: { name: 'Cloud Computing', code: 'IT301', lecturer: 'Tebogo Molefe', room: 'Cloud Lab', day: 'Thursday', time: '10:00 - 11:30', timeSlot: '10:00' },
-      // Mathematics
-      MATH101: { name: 'Calculus I', code: 'MATH101', lecturer: 'Kgotso Khumalo', room: 'Math Building 101', day: 'Tuesday', time: '10:00 - 11:30', timeSlot: '10:00' },
-      MATH201: { name: 'Calculus II', code: 'MATH201', lecturer: 'Kgotso Khumalo', room: 'Math Building 105', day: 'Monday', time: '14:00 - 15:30', timeSlot: '14:00' },
-      MATH301: { name: 'Linear Algebra', code: 'MATH301', lecturer: 'Kgotso Khumalo', room: 'Math Building 201', day: 'Thursday', time: '13:00 - 14:30', timeSlot: '13:00' },
-      // Physics
-      PHY101: { name: 'Introduction to Physics', code: 'PHY101', lecturer: 'Itumeleng Molefe', room: 'Science Lab 101', day: 'Monday', time: '13:00 - 14:30', timeSlot: '13:00' },
-      PHY201: { name: 'Physics for Engineers', code: 'PHY201', lecturer: 'Itumeleng Molefe', room: 'Science Lab 102', day: 'Wednesday', time: '14:00 - 15:30', timeSlot: '14:00' },
-      PHY301: { name: 'Quantum Physics', code: 'PHY301', lecturer: 'Itumeleng Molefe', room: 'Science Lab 103', day: 'Friday', time: '09:00 - 10:30', timeSlot: '09:00' },
-      // English
-      ENG101: { name: 'Academic Writing', code: 'ENG101', lecturer: 'Ishmail Mdlhuli', room: 'Humanities Hall 202', day: 'Friday', time: '10:00 - 12:00', timeSlot: '10:00' },
-      ENG201: { name: 'Advanced Composition', code: 'ENG201', lecturer: 'Ishmail Mdlhuli', room: 'Humanities Hall 205', day: 'Wednesday', time: '15:00 - 17:00', timeSlot: '15:00' },
-      ENG301: { name: 'Creative Writing', code: 'ENG301', lecturer: 'Ishmail Mdlhuli', room: 'Humanities Hall 208', day: 'Tuesday', time: '14:00 - 15:30', timeSlot: '14:00' },
-      // Engineering
-      DESIGN101: { name: 'Engineering Design', code: 'DESIGN101', lecturer: 'Ishmail Mdlhuli', room: 'Design Studio', day: 'Friday', time: '13:00 - 15:00', timeSlot: '13:00' },
-      MECH101: { name: 'Mechanics', code: 'MECH101', lecturer: 'Itumeleng Molefe', room: 'Engineering Lab 101', day: 'Monday', time: '11:00 - 12:30', timeSlot: '11:00' },
-      ELEC101: { name: 'Electronics', code: 'ELEC101', lecturer: 'Itumeleng Molefe', room: 'Electronics Lab', day: 'Wednesday', time: '09:00 - 10:30', timeSlot: '09:00' }
-    };
-
-    // Build timetable structure
+    // Days of week
     const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
-    const timeSlots = ['09:00', '10:00', '11:00', '13:00', '14:00', '15:00'];
+    // Time slots with keys that match our storage format (e.g., "09:00")
+    const timeSlots = [
+      { key: '09:00', display: '09:00 - 10:30' },
+      { key: '10:00', display: '10:00 - 11:30' },
+      { key: '11:00', display: '11:00 - 12:30' },
+      { key: '13:00', display: '13:00 - 14:30' },
+      { key: '14:00', display: '14:00 - 15:30' },
+      { key: '15:00', display: '15:00 - 17:00' }
+    ];
     
+    // Initialize empty timetable
     const newTimetable = {};
     days.forEach(day => {
       newTimetable[day] = {};
       timeSlots.forEach(slot => {
-        newTimetable[day][slot] = null;
+        newTimetable[day][slot.key] = null;
       });
     });
-
-    // Populate timetable with student's enrolled courses
-    if (studentCourses && studentCourses.length > 0) {
-      studentCourses.forEach(courseId => {
-        const course = allCourses[courseId];
-        if (course && newTimetable[course.day]) {
-          newTimetable[course.day][course.timeSlot] = {
-            name: course.name,
-            lecturer: course.lecturer,
-            room: course.room,
-            code: course.code
-          };
-        }
-      });
-    }
-
-    console.log("Generated timetable:", newTimetable);
+    
+    // Helper to convert display time like "10:00 AM" to key "10:00"
+    const timeDisplayToKey = (display) => {
+      const match = display.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/i);
+      if (!match) return null;
+      let hour = parseInt(match[1], 10);
+      const minute = match[2];
+      const ampm = match[3].toUpperCase();
+      if (ampm === 'PM' && hour !== 12) hour += 12;
+      if (ampm === 'AM' && hour === 12) hour = 0;
+      return `${hour.toString().padStart(2, '0')}:${minute}`;
+    };
+    
+    // Place each appointment
+    futureConfirmed.forEach(apt => {
+      const aptDate = new Date(apt.date);
+      const dayName = aptDate.toLocaleDateString('en-US', { weekday: 'long' });
+      let timeKey = timeDisplayToKey(apt.timeSlot);
+      if (!timeKey) {
+        // fallback: try to parse directly
+        if (apt.timeSlot.includes('09:00')) timeKey = '09:00';
+        else if (apt.timeSlot.includes('10:00')) timeKey = '10:00';
+        else if (apt.timeSlot.includes('11:00')) timeKey = '11:00';
+        else if (apt.timeSlot.includes('13:00')) timeKey = '13:00';
+        else if (apt.timeSlot.includes('14:00')) timeKey = '14:00';
+        else if (apt.timeSlot.includes('15:00')) timeKey = '15:00';
+        else return;
+      }
+      if (newTimetable[dayName] && newTimetable[dayName][timeKey] === null) {
+        newTimetable[dayName][timeKey] = {
+          lecturer: apt.lecturerName,
+          purpose: apt.purpose,
+          timeSlot: apt.timeSlot,
+          date: apt.date
+        };
+      }
+    });
+    
     setTimetable(newTimetable);
   };
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   const timeSlots = [
-    { time: '09:00', display: '09:00 - 10:30' },
-    { time: '10:00', display: '10:00 - 11:30' },
-    { time: '11:00', display: '11:00 - 12:30' },
-    { time: '13:00', display: '13:00 - 14:30' },
-    { time: '14:00', display: '14:00 - 15:30' },
-    { time: '15:00', display: '15:00 - 17:00' }
+    { key: '09:00', display: '09:00 - 10:30' },
+    { key: '10:00', display: '10:00 - 11:30' },
+    { key: '11:00', display: '11:00 - 12:30' },
+    { key: '13:00', display: '13:00 - 14:30' },
+    { key: '14:00', display: '14:00 - 15:30' },
+    { key: '15:00', display: '15:00 - 17:00' }
   ];
 
   const handlePrint = () => {
@@ -106,53 +108,41 @@ const StudentTimetable = () => {
     toast.success('Print dialog opened');
   };
 
-  // Get student info for display
-  const getStudentInfo = () => {
-    if (user?.courseDetails?.length > 0) {
-      return `${user.name} • ${user.courseDetails.length} Courses`;
-    }
-    if (user?.enrolledCourses?.length > 0) {
-      return `${user.name} • ${user.enrolledCourses.length} Courses`;
-    }
-    return `${user?.name} • No Courses Enrolled`;
-  };
-
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const hasCourses = (user?.enrolledCourses?.length > 0) || (user?.courseDetails?.length > 0) || (user?.selectedCourses?.length > 0);
+  // Count total appointments in timetable
+  const appointmentCount = Object.values(timetable).reduce((count, day) => {
+    return count + Object.values(day).filter(v => v !== null).length;
+  }, 0);
 
   return (
     <div>
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white shadow-lg mb-6">
+      <div className="bg-gradient-to-r from-primary-500 to-secondary-600 rounded-xl p-6 text-white shadow-lg mb-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold mb-2">My Timetable</h1>
-            <p className="text-blue-100">{getStudentInfo()} • Week {week}</p>
+            <p className="text-primary-100">
+              {user?.name} • {appointmentCount} confirmed appointment{appointmentCount !== 1 ? 's' : ''}
+            </p>
           </div>
           <button
             onClick={handlePrint}
-            className="px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition font-medium"
+            className="px-4 py-2 bg-white text-primary-600 rounded-lg hover:bg-primary-50 transition font-medium"
           >
             🖨️ Print
           </button>
         </div>
       </div>
 
-      {!hasCourses ? (
+      {appointmentCount === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
           <div className="text-6xl mb-4">📅</div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No Courses Enrolled</h3>
-          <p className="text-gray-600">You haven't selected any courses yet.</p>
-          <p className="text-gray-500 text-sm mt-2">Please complete your registration to see your timetable.</p>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">No Confirmed Appointments</h3>
+          <p className="text-gray-600">Once your appointment requests are accepted, they will appear here.</p>
+          <button 
+            onClick={() => window.location.href = '/appointments'}
+            className="mt-4 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600"
+          >
+            Book an Appointment
+          </button>
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -175,18 +165,18 @@ const StudentTimetable = () => {
                       {slot.display}
                     </td>
                     {days.map(day => {
-                      const course = timetable[day]?.[slot.time];
+                      const appointment = timetable[day]?.[slot.key];
                       return (
                         <td key={day} className="px-4 py-3">
-                          {course ? (
-                            <div className="bg-blue-50 p-2 rounded-lg border border-blue-200">
-                              <p className="font-medium text-gray-900 text-sm">{course.name}</p>
-                              <p className="text-xs text-gray-600 mt-1">👨‍🏫 {course.lecturer}</p>
-                              <p className="text-xs text-gray-500">📍 {course.room}</p>
-                              <p className="text-xs text-blue-600 mt-1">{course.code}</p>
+                          {appointment ? (
+                            <div className="bg-green-50 p-2 rounded-lg border border-green-200">
+                              <p className="font-medium text-gray-900 text-sm">📅 {appointment.purpose}</p>
+                              <p className="text-xs text-gray-600 mt-1">👨‍🏫 {appointment.lecturer}</p>
+                              <p className="text-xs text-gray-500">🕐 {appointment.timeSlot}</p>
+                              <p className="text-xs text-gray-400">{appointment.date}</p>
                             </div>
                           ) : (
-                            <p className="text-gray-400 text-sm">Free Period</p>
+                            <p className="text-gray-400 text-sm">Free</p>
                           )}
                         </td>
                       );
@@ -199,10 +189,9 @@ const StudentTimetable = () => {
         </div>
       )}
 
-      <div className="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
-        <p className="text-sm text-blue-800">
-          <strong>📌 Note:</strong> Timetable shows your enrolled courses for this semester.
-          {!hasCourses && " Please complete your course registration."}
+      <div className="mt-6 bg-primary-50 rounded-lg p-4 border border-primary-200">
+        <p className="text-sm text-primary-800">
+          <strong>📌 Note:</strong> This timetable shows only <strong>confirmed appointments</strong> that are scheduled for today or future dates. Past appointments are automatically removed.
         </p>
       </div>
     </div>

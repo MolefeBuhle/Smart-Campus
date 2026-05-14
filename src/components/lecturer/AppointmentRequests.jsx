@@ -1,3 +1,4 @@
+// src/components/lecturer/AppointmentRequests.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAppointments } from '../../contexts/AppointmentContext';
@@ -7,7 +8,7 @@ import toast from 'react-hot-toast';
 const AppointmentRequests = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { getPendingRequests, getLecturerAppointments, acceptAppointment, rescheduleAppointment } = useAppointments();
+  const { getPendingRequests, getLecturerAppointments, acceptAppointment, rescheduleAppointment, appointments } = useAppointments();
   const [pendingRequests, setPendingRequests] = useState([]);
   const [confirmedAppointments, setConfirmedAppointments] = useState([]);
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
@@ -20,24 +21,23 @@ const AppointmentRequests = () => {
     loadAppointments();
     const slots = JSON.parse(localStorage.getItem('campus_time_slots') || '[]');
     setTimeSlots(slots);
-  }, []);
+  }, [appointments]);  // ← reload when appointments change (e.g., after student cancel)
 
   const loadAppointments = () => {
-    // Get ONLY pending requests for THIS lecturer
     const pending = getPendingRequests();
     const confirmed = getLecturerAppointments().filter(apt => apt.status === 'confirmed');
-    
     setPendingRequests(pending);
     setConfirmedAppointments(confirmed);
   };
 
-  const handleAccept = async (appointmentId) => {
-    await acceptAppointment(appointmentId);
-    loadAppointments();
-    toast.success('Appointment accepted!');
+  const handleAccept = async (appointmentId, e) => {
+    e.stopPropagation();
+    const result = await acceptAppointment(appointmentId);
+    if (result.success) loadAppointments();
   };
 
-  const handleReschedule = (appointment) => {
+  const handleReschedule = (appointment, e) => {
+    e.stopPropagation();
     setSelectedAppointment(appointment);
     setShowRescheduleModal(true);
   };
@@ -50,7 +50,6 @@ const AppointmentRequests = () => {
       setNewDate('');
       setNewTime('');
       loadAppointments();
-      toast.success('Appointment rescheduled!');
     }
   };
 
@@ -66,15 +65,15 @@ const AppointmentRequests = () => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white shadow-lg mb-6">
+      <div className="bg-gradient-to-r from-primary-500 to-secondary-600 rounded-xl p-6 text-white shadow-lg mb-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold mb-2">Manage Appointments</h1>
-            <p className="text-blue-100">{getLecturerName()} • Review and manage student appointment requests</p>
+            <p className="text-primary-100">{getLecturerName()} • Review and manage student appointment requests</p>
           </div>
           <button
             onClick={() => navigate('/dashboard')}
-            className="px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition font-medium"
+            className="px-4 py-2 bg-white text-primary-600 rounded-lg hover:bg-primary-50 transition font-medium"
           >
             ← Back to Dashboard
           </button>
@@ -82,7 +81,6 @@ const AppointmentRequests = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Pending Requests - ONLY for this lecturer */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Pending Requests ({pendingRequests.length})
@@ -91,7 +89,6 @@ const AppointmentRequests = () => {
             <div className="text-center py-8">
               <div className="text-6xl mb-4">📅</div>
               <p className="text-gray-500">No pending appointment requests</p>
-              <p className="text-sm text-gray-400 mt-1">When students book appointments, they will appear here</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -106,13 +103,13 @@ const AppointmentRequests = () => {
                     </div>
                     <div className="flex space-x-2">
                       <button
-                        onClick={() => handleAccept(request.id)}
+                        onClick={(e) => handleAccept(request.id, e)}
                         className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
                       >
                         Accept
                       </button>
                       <button
-                        onClick={() => handleReschedule(request)}
+                        onClick={(e) => handleReschedule(request, e)}
                         className="px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700"
                       >
                         Reschedule
@@ -125,7 +122,6 @@ const AppointmentRequests = () => {
           )}
         </div>
 
-        {/* Confirmed Appointments */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Confirmed Appointments ({confirmedAppointments.length})
@@ -134,7 +130,6 @@ const AppointmentRequests = () => {
             <div className="text-center py-8">
               <div className="text-6xl mb-4">✅</div>
               <p className="text-gray-500">No confirmed appointments</p>
-              <p className="text-sm text-gray-400 mt-1">Accepted appointments will appear here</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -150,7 +145,6 @@ const AppointmentRequests = () => {
         </div>
       </div>
 
-      {/* Reschedule Modal */}
       {showRescheduleModal && selectedAppointment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
@@ -182,7 +176,7 @@ const AppointmentRequests = () => {
               <div className="flex space-x-3 pt-4">
                 <button
                   onClick={submitReschedule}
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+                  className="flex-1 bg-primary-500 text-white py-2 rounded-lg hover:bg-primary-600 transition"
                 >
                   Confirm
                 </button>
@@ -191,7 +185,7 @@ const AppointmentRequests = () => {
                     setShowRescheduleModal(false);
                     setSelectedAppointment(null);
                   }}
-                  className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300"
+                  className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition"
                 >
                   Cancel
                 </button>

@@ -1,3 +1,4 @@
+// src/components/lecturer/LecturerDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAppointments } from '../../contexts/AppointmentContext';
@@ -7,14 +8,11 @@ import toast from 'react-hot-toast';
 const LecturerDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { getPendingRequests, getLecturerAppointments, acceptAppointment, rescheduleAppointment } = useAppointments();
+  const { getPendingRequests, getLecturerAppointments, acceptAppointment, rescheduleAppointment, appointments } = useAppointments();
+  
   const [pendingRequests, setPendingRequests] = useState([]);
   const [confirmedAppointments, setConfirmedAppointments] = useState([]);
-  const [stats, setStats] = useState({
-    pendingCount: 0,
-    totalStudents: 0,
-    todayClasses: 3
-  });
+  const [stats, setStats] = useState({ pendingCount: 0 });
   const [showRescheduleModal, setShowRescheduleModal] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [newDate, setNewDate] = useState('');
@@ -27,40 +25,32 @@ const LecturerDashboard = () => {
     }
     const slots = JSON.parse(localStorage.getItem('campus_time_slots') || '[]');
     setTimeSlots(slots);
-  }, [user]);
+  }, [user, appointments]);
 
   const loadData = () => {
     const pending = getPendingRequests();
     const confirmed = getLecturerAppointments().filter(apt => apt.status === 'confirmed');
-    const allUsers = JSON.parse(localStorage.getItem('campus_users') || '[]');
-    const totalStudents = allUsers.filter(u => u.role === 'student').length;
-    
     setPendingRequests(pending);
     setConfirmedAppointments(confirmed);
-    setStats({
-      pendingCount: pending.length,
-      totalStudents: totalStudents,
-      todayClasses: 3
-    });
+    setStats({ pendingCount: pending.length });
   };
 
-  const handleNavigate = (type) => {
-    if (type === 'pending') {
-      navigate('/appointments');
-    } else if (type === 'students') {
-      navigate('/my-students');
-    } else if (type === 'classes') {
-      navigate('/my-classes');
+  const handleCardClick = (type) => {
+    if (type === 'timetable') {
+      navigate('/lecturer-timetable');
+    } else if (type === 'appointments') {
+      navigate('/manage-appointments');
     }
   };
 
-  const handleAccept = async (appointmentId) => {
+  const handleAccept = async (appointmentId, e) => {
+    e.stopPropagation();
     await acceptAppointment(appointmentId);
-    loadData();
-    toast.success('Appointment accepted!');
+    // loadData will re-run due to appointments dependency
   };
 
-  const handleReschedule = (appointment) => {
+  const handleReschedule = (appointment, e) => {
+    e.stopPropagation();
     setSelectedAppointment(appointment);
     setShowRescheduleModal(true);
   };
@@ -72,123 +62,99 @@ const LecturerDashboard = () => {
       setSelectedAppointment(null);
       setNewDate('');
       setNewTime('');
-      loadData();
-      toast.success('Appointment rescheduled!');
+      // loadData will re-run automatically
     }
   };
 
+  const getLecturerInfo = () => {
+    const info = {
+      'tebogo@campus.edu': { name: 'Tebogo Molefe', department: 'Computer Science' },
+      'kgotso@campus.edu': { name: 'Kgotso Khumalo', department: 'Mathematics' },
+      'itumeleng@campus.edu': { name: 'Itumeleng Molefe', department: 'Physics' },
+      'ishmail@campus.edu': { name: 'Ishmail Mdlhuli', department: 'English' }
+    };
+    return info[user?.email] || { name: user?.name, department: 'Lecturer' };
+  };
+
+  const lecturerInfo = getLecturerInfo();
+
   return (
     <div className="space-y-6">
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-6 text-white shadow-lg">
-        <h1 className="text-2xl font-bold mb-2">Welcome, {user?.name}!</h1>
-        <p className="text-blue-100">Department of {user?.department || 'Computer Science'}</p>
+      <div className="bg-gradient-to-r from-primary-500 to-secondary-600 rounded-xl p-6 text-white shadow-lg">
+        <h1 className="text-2xl font-bold mb-2">Welcome, {lecturerInfo.name}!</h1>
+        <p className="text-primary-100">Department of {lecturerInfo.department}</p>
       </div>
       
-      {/* Clickable Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Two Cards: Timetable & All Appointments – side by side, fit the space */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Timetable Card */}
         <div 
-          onClick={() => handleNavigate('pending')}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer hover:bg-yellow-50"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-3xl">⏳</span>
-            <span className="text-2xl font-bold text-yellow-600">{stats.pendingCount}</span>
-          </div>
-          <h3 className="text-gray-600 font-medium">Pending Requests</h3>
-          <p className="text-xs text-yellow-500 mt-1">Click to manage →</p>
-        </div>
-        
-        <div 
-          onClick={() => handleNavigate('students')}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer hover:bg-green-50"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-3xl">👥</span>
-            <span className="text-2xl font-bold text-green-600">{stats.totalStudents}</span>
-          </div>
-          <h3 className="text-gray-600 font-medium">Total Students</h3>
-          <p className="text-xs text-green-500 mt-1">Click to view list →</p>
-        </div>
-        
-        <div 
-          onClick={() => handleNavigate('classes')}
+          onClick={() => handleCardClick('timetable')}
           className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer hover:bg-blue-50"
         >
           <div className="flex items-center justify-between mb-3">
-            <span className="text-3xl">📚</span>
-            <span className="text-2xl font-bold text-blue-600">{stats.todayClasses}</span>
+            <span className="text-3xl">📅</span>
+            <span className="text-2xl font-bold text-primary-600">Timetable</span>
           </div>
-          <h3 className="text-gray-600 font-medium">Today's Classes</h3>
-          <p className="text-xs text-blue-500 mt-1">Click to view schedule →</p>
+          <h3 className="text-gray-600 font-medium">View your teaching schedule</h3>
+          <p className="text-xs text-primary-500 mt-1">Click to open →</p>
+        </div>
+
+        {/* All Appointments Card */}
+        <div 
+          onClick={() => handleCardClick('appointments')}
+          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer hover:bg-green-50"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-3xl">📋</span>
+            <span className="text-2xl font-bold text-green-600">All Appointments</span>
+          </div>
+          <h3 className="text-gray-600 font-medium">Manage all appointment requests</h3>
+          <p className="text-xs text-green-500 mt-1">Click to open →</p>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Pending Requests ({pendingRequests.length})
-          </h2>
-          {pendingRequests.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500">No pending appointment requests</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {pendingRequests.map((request) => (
-                <div key={request.id} className="p-3 bg-gray-50 rounded-lg">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <p className="font-medium text-gray-900">{request.studentName}</p>
-                      <p className="text-sm text-gray-600">{request.date} at {request.timeSlot}</p>
-                      <p className="text-sm text-gray-600 mt-1">Purpose: {request.purpose}</p>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleAccept(request.id)}
-                        className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
-                      >
-                        Accept
-                      </button>
-                      <button
-                        onClick={() => handleReschedule(request)}
-                        className="px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700"
-                      >
-                        Reschedule
-                      </button>
-                    </div>
+      {/* Pending Requests Section (unchanged) */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          Pending Requests ({pendingRequests.length})
+        </h2>
+        {pendingRequests.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No pending appointment requests</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {pendingRequests.map((request) => (
+              <div key={request.id} className="p-3 bg-gray-50 rounded-lg">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <p className="font-medium text-gray-900">{request.studentName}</p>
+                    <p className="text-sm text-gray-600">{request.date} at {request.timeSlot}</p>
+                    <p className="text-sm text-gray-600 mt-1">Purpose: {request.purpose}</p>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={(e) => handleAccept(request.id, e)}
+                      className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      onClick={(e) => handleReschedule(request, e)}
+                      className="px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700"
+                    >
+                      Reschedule
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-        
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Confirmed Appointments ({confirmedAppointments.length})
-          </h2>
-          {confirmedAppointments.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500">No confirmed appointments</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {confirmedAppointments.map((appointment) => (
-                <div key={appointment.id} className="p-3 bg-green-50 rounded-lg border border-green-200">
-                  <p className="font-semibold text-gray-900">{appointment.studentName}</p>
-                  <p className="text-sm text-gray-600">
-                    {appointment.date} at {appointment.timeSlot}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Purpose: {appointment.purpose}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
+      {/* Reschedule Modal (unchanged) */}
       {showRescheduleModal && selectedAppointment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full">
@@ -220,7 +186,7 @@ const LecturerDashboard = () => {
               <div className="flex space-x-3 pt-4">
                 <button
                   onClick={submitReschedule}
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+                  className="flex-1 bg-primary-500 text-white py-2 rounded-lg hover:bg-primary-600"
                 >
                   Confirm
                 </button>
